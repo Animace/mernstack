@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -15,14 +13,32 @@ const path = require('path');
 const app = express();
 const uploadMiddleware = multer({ dest: 'uploads/' });
 const salt = bcrypt.genSaltSync(10);
-const secret = process.env.JWT_SECRET;
+const secret = '#';
 
-app.use(cors({ credentials: true, origin: process.env.ORIGIN_URL }));
+app.use(cors({ credentials: true, origin: 'http://localhost:3000' }));
 app.use(express.json());
 app.use(cookieParser());
 app.use('/uploads', express.static(__dirname + '/uploads'));
 
-mongoose.connect(process.env.MONGODB_URI);
+// Define the MongoDB URI
+const mongodbUri = 'mongodb+srv://ace:#@cluster0.76wb5tg.mongodb.net/fimag?retryWrites=true&w=majority&appName=Cluster0';
+
+// Log the MongoDB URI again just before connecting to MongoDB
+console.log('Attempting to connect to MongoDB with URI:', mongodbUri);
+// Connect to MongoDB
+mongoose.connect(mongodbUri, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => {
+        console.log('Connected to MongoDB');
+        const port = process.env.PORT || 4000; // Use port 4000 if PORT environment variable is not set
+        app.listen(port, () => {
+            console.log(`Server is running on port ${port}`);
+        });
+    })
+    .catch(error => {
+        console.error('Error connecting to MongoDB:', error.message);
+    });
+
+
 
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
@@ -170,9 +186,12 @@ app.get('/post/:id', async (req, res) => {
     res.json(postDoc);
 });
 
-const port = process.env.PORT || 4000; // Use port 4000 if PORT environment variable is not set
+// Start the server
+function startServer() {
+    const port = process.env.PORT || 4000;
+    app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+    });
+}
 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
 
